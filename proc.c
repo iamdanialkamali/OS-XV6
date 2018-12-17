@@ -12,7 +12,7 @@ struct{
     struct proc q1[NPROC];
     struct proc q2[NPROC];
     struct proc q3[NPROC];
-    int counters[] ={0,0,0,0};
+    int counters[4];
 }mlfq;
 ////////////////////////////////////////////////////////////////////////
 struct {
@@ -337,6 +337,7 @@ scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
+//  struct mlfq mlfq_table;
   c->proc = 0;
   
   for(;;){
@@ -345,7 +346,16 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+
+//    for(int i =0; i<4;i++){
+//      if(i != 3){
+//        for(int j = 0 ;j <mlfq_table ;)
+//
+//      } else{
+//
+//      }
+//    }
+        for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
 
