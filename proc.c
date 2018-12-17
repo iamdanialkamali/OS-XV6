@@ -7,6 +7,14 @@
 #include "proc.h"
 #include "spinlock.h"
 
+struct{
+    struct proc q0[NPROC];
+    struct proc q1[NPROC];
+    struct proc q2[NPROC];
+    struct proc q3[NPROC];
+    int counters[] ={0,0,0,0};
+}mlfq;
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
