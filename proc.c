@@ -88,7 +88,12 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-
+///////////////////////////////////// initial times for process /////////////////////////////////////
+  p->createTime = ticks;
+  p->readyTime = 0;
+  p->runTime = 0;
+  p->sleepTime = 0;
+///////////////////////////////////////////////////////////////////////////
   release(&ptable.lock);
 
   // Allocate kernel stack.
