@@ -7,13 +7,9 @@
 #include "proc.h"
 #include "spinlock.h"
 //////////////////////////////////mlfq struct///////////////////////
-struct{
-    struct proc q0[NPROC];
-    struct proc q1[NPROC];
-    struct proc q2[NPROC];
-    struct proc q3[NPROC];
-    int counters[4];
-}mlfq;
+#define NGUEUE 4
+struct proc mlfqQueues[NGUEUE][NPROC];
+int queueLength[NGUEUE]={};
 ////////////////////////////////////////////////////////////////////////
 struct {
   struct spinlock lock;
