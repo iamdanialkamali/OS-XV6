@@ -303,11 +303,21 @@ wait(void)
       if(p->parent != curproc)
         continue;
       havekids = 1;
-      if(p->state == ZOMBIE){
+        cprintf("ZOMBIE%d: \n",p->pid);
+
+        if(p->state == ZOMBIE){
         // Found one.
-          for (int m = pIndex; m < queueLength[qIndex]; m++) {
-              mlfqQueues[qIndex][m] = mlfqQueues[qIndex][m + 1];
+          for (int i = 0; i < queueLength[p->priority] ; i++) {
+              if(mlfqQueues[p->priority][i]->pid == p->pid ){
+                  //remove from current queue
+                  cprintf("ZOMBIE%d: \n",p->pid);
+                  for (int m = i; m < queueLength[p->priority]-1; m++) {
+                      mlfqQueues[p->priority][m] = mlfqQueues[p->priority][m + 1];
+                  }
+                  queueLength[p->priority]--;
+              }
           }
+
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -377,6 +387,7 @@ void scheduler(void) {
                                 //add to next queue
                                 queueLength[qIndex + 1]++;
                                 mlfqQueues[qIndex + 1][queueLength[qIndex + 1]] = p;
+                                p->priority++;
 
                                 //remove from current queue
                                 for (int m = pIndex; m < queueLength[qIndex]; m++) {
