@@ -55,6 +55,7 @@ struct proc {
     int  sleepTime;              // process sleeping time
     int  readyTime;              // process ready (RUNNABLE) time
     int  runTime;                // process running time
+    int cycle ;                  //process runnng cycles
     //////////////////////////////////////////////////////////////////////////////
 };
 
