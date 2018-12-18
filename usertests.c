@@ -476,19 +476,24 @@ sharedfd(void)
     return;
   }
   pid = fork();
+
   memset(buf, pid==0?'c':'p', sizeof(buf));
-  for(i = 0; i < 1000; i++){
+
+    for(i = 0; i < 1000; i++){
     if(write(fd, buf, sizeof(buf)) != sizeof(buf)){
       printf(1, "fstests: write sharedfd failed\n");
       break;
     }
   }
-  if(pid == 0)
+    printf(1,"dsssssssssssdadsadadad\n");
+
+
+    if(pid == 0)
     exit();
   else
     wait();
   close(fd);
-  fd = open("sharedfd", 0);
+    fd = open("sharedfd", 0);
   if(fd < 0){
     printf(1, "fstests: cannot open sharedfd for reading\n");
     return;
@@ -1756,11 +1761,11 @@ main(int argc, char *argv[])
   }
   close(open("usertests.ran", O_CREATE));
 
-  argptest();
-  createdelete();
-  linkunlink();
-  concreate();
-  fourfiles();
+//  argptest();
+//  createdelete();
+//  linkunlink();
+//  concreate();
+//  fourfiles();
   sharedfd();
 
   bigargtest();
