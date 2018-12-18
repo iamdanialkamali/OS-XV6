@@ -6,15 +6,15 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+
 //////////////////////////////////mlfq struct///////////////////////
 #define NQUEUE 4
 #define baseTmeSlice 1000
-#define diffrence 1000
-
+#define diffrence 100
 struct proc* mlfqQueues[NQUEUE][NPROC];
 int queueLength[NQUEUE]={};
 
-////////////////////////////////////////////////////////////////////////
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -338,141 +338,114 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
-void
-scheduler(void) {
+
+void scheduler(void) {
     struct proc *p;
     struct cpu *c = mycpu();
     c->proc = 0;
 
   ///   Enable interrupts on this processor.
-    for(;;) {
-        sti();
-        ///print queue lengths
-        for (int  w = 0; w < NQUEUE; w++) {
-//                cprintf("QUEUE %d  Lenght = %d \n", w,queueLength[w]);
-            }
-//////////////////////////////////////////////////////////////// mlfq scheduler/////////////////////////////////////////////////
-
-        acquire(&ptable.lock);
-        int i = 0 ; int j =0 ;
-//        cprintf("LOOOOOOOOOOOOP%d\n", i);
-
-        for ( i = 0; i < NQUEUE; i++) {
-//            cprintf("TRYING QUEUE IS  :  %d\n", i);
-
-            if(queueLength[i]!=0) {
-                if (i != NQUEUE - 1)  // for all queues else last one
-                {
-
-                    for (j = 0; j < queueLength[i]; j++) {
-
-                        p = mlfqQueues[i][j];
-//                        cprintf("PROCESS ID = %d\n", p->pid);
-
-//                        cprintf("PROCESS STATE = %d\n", p->state);
-
-                        if (p->state != RUNNABLE) {
-//                            cprintf("PROCESS STATE  RUNNABLE = %d\n", RUNNABLE);
-
-                        } else {
-                            cprintf("%d", queueLength[0]);
-
-                            // Switch to chosen process.  It is the process's job
-                            // to release ptable.lock and then reacquire it
-                            // before jumping back to us.
-
-
-//                            cprintf("RUNNING");
-                            c->proc = p;
-                            p->cycle++;
-                            switchuvm(p);
-                            p->state = RUNNING;
-                            swtch(&(c->scheduler), p->context);
-                            switchkvm();
-
-                            if (p->cycle == baseTmeSlice + i * diffrence) {
-                                queueLength[i + 1]++;
-                                queueLength[i]--;
-                                mlfqQueues[i + 1][queueLength[i + 1]] = p;
-                                //mlfqQueues[i][j] = NULL;
-                                for (int m = 0; m < j; m++) {
-                                    mlfqQueues[i][j] = mlfqQueues[i][j + 1];
-                                }
-                            }
-                            c->proc = 0;
-                            break;
-
-                            // Process is done running for now.
-                            // It should have changed its p->state before coming back.
-                        }
-
-                    }
-
-                } else {
-                    cprintf("%d\n", i);
-
-//                    cprintf("EEEEEEEEEEEEEELSE\n");
-
-                    for (j = 0; j < queueLength[i]; j++) {
-                        p = mlfqQueues[i][j];
-
-                        if (p->state != RUNNABLE) {}
-                        else {
-                            c->proc = p;
-                            p->cycle++;
-                            switchuvm(p);
-                            p->state = RUNNING;
-                            swtch(&(c->scheduler), p->context);
-                            switchkvm();
-                            // Process is done running for now.
-                            // It should have changed its p->state before coming back.
-                            c->proc = 0;
-                            break;
-                        }
-                    }
-
-                }
-            }
-
-
-        }
-
-        release(&ptable.lock);
-    }
-}
+//    for(;;) {
+//        sti();
+////////////////////////////////////////////////////////////////// mlfq scheduler/////////////////////////////////////////////////
+//
+//        acquire(&ptable.lock);
+//        int qIndex = 0 ;
+//        int pIndex = 0 ;
+//        for ( qIndex = 0; qIndex < NQUEUE; qIndex++) {
+//            if(queueLength[qIndex]!=0) {
+//                if (qIndex != NQUEUE - 1){  // for all queues else last one
+//                    for (pIndex = 0; pIndex < queueLength[qIndex]; pIndex++) {
+//                        p = mlfqQueues[qIndex][pIndex];
+//                        if (p->state != RUNNABLE)
+//                            continue;
+//                        else {
+//                            c->proc = p;
+//                            p->cycle++;
+//                            switchuvm(p);
+//                            p->state = RUNNING;
+//                            swtch(&(c->scheduler), p->context);
+//                            switchkvm();
+//
+//                            //for reduce priority
+//                            if (p->cycle >= baseTmeSlice + qIndex * diffrence) {
+//                                //add to next queue
+//                                queueLength[qIndex + 1]++;
+//                                mlfqQueues[qIndex + 1][queueLength[qIndex + 1]] = p;
+//
+//                                //remove from current queue
+//                                for (int m = pIndex; m < queueLength[qIndex]; m++) {
+//                                    mlfqQueues[qIndex][m] = mlfqQueues[qIndex][m + 1];
+//                                }
+//                                queueLength[qIndex]--;
+//
+//                            }
+//                            c->proc = 0;
+//                            break;
+//                        }
+//                    }
+//
+//                } else {
+//                    for (pIndex = 0; pIndex < queueLength[qIndex]; pIndex++) {
+//                        p = mlfqQueues[qIndex][pIndex];
+//
+//                        if (p->state != RUNNABLE) {}
+//                        else {
+//                            c->proc = p;
+//                            p->cycle++;
+//                            switchuvm(p);
+//                            p->state = RUNNING;
+//                            swtch(&(c->scheduler), p->context);
+//                            switchkvm();
+//                            // Process is done running for now.
+//                            // It should have changed its p->state before coming back.
+//                            c->proc = 0;
+//                            break;
+//                        }
+//                    }
+//
+//                }
+//            }
+//
+//
+//        }
+//
+//        release(&ptable.lock);
+//    }
+//}
 
 //////////////////////////////////////////////
-//    for (;;) {
-//// Enable interrupts on this processor.
-//        sti();
-//
-//// Loop over process table looking for process to run.
-//        acquire(&ptable.lock);
-//        for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-//            if (p->state != RUNNABLE)
-//                continue;
+    for (;;) {
+// Enable interrupts on this processor.
+        sti();
+
+// Loop over process table looking for process to run.
+        acquire(&ptable.lock);
+        for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+            if (p->state != RUNNABLE)
+                continue;
 //              cprintf("PROCESS ID = %d\n", p->pid);
-//
-//                        cprintf("PROCESS STATE = %d\n", p->state);
-//// Switch to chosen process.  It is the process's job
-//// to release ptable.lock and then reacquire it
-//// before jumping back to us.
-//            c->proc = p;
-//            switchuvm(p);
-//            p->state = RUNNING;
-//
-//            swtch(&(c->scheduler), p->context);
-//            switchkvm();
-//
-//// Process is done running for now.
-//// It should have changed its p->state before coming back.
-//            c->proc = 0;
-//        }
-//        release(&ptable.lock);
-//
-//    }
-//
-//}
+
+  //                      cprintf("PROCESS STATE = %d\n", p->state);
+// Switch to chosen process.  It is the process's job
+// to release ptable.lock and then reacquire it
+// before jumping back to us.
+            c->proc = p;
+            switchuvm(p);
+            p->state = RUNNING;
+
+            swtch(&(c->scheduler), p->context);
+            switchkvm();
+
+// Process is done running for now.
+// It should have changed its p->state before coming back.
+            c->proc = 0;
+        }
+        release(&ptable.lock);
+
+    }
+
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
