@@ -97,13 +97,14 @@ sys_uptime(void)
 int
 sys_getTimetable(void)
 {
-    int pid;
-    if (argint(0, &pid) < 0)
-        return -1;
-  struct process_Timetable * processTimeTable;
+    struct process_Timetable * processTimeTable;
   if(argptr(0,(void *) &processTimeTable, sizeof(*processTimeTable))< 0 ){
     return -1;
   }
+    int pid;
+    if (argint(1, &pid) < 0)
+        return -1;
 
-  return getTimetable(processTimeTable, pid);
+
+    return getTimetable(processTimeTable, pid);
 }

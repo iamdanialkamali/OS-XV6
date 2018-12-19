@@ -10,9 +10,9 @@
 struct process_Timetable pTimetable;
 
 
-#define NQUEUE 5
-#define baseTime 10
-#define diffrence 20
+#define NQUEUE 4
+#define baseTime 40
+#define diffrence 100
 
 int queueCounts[NQUEUE];
 
@@ -603,11 +603,10 @@ void boost(){
 }
 
 int getTimetable(struct process_Timetable* prTimetable,int pid) {
-    pid++;
     prTimetable = &pTimetable;
-    for(int i  =0 ; i<NPROC ;i++){
-        cprintf( " %d:    %d,     %d   %d\n", i, pTimetable.end_cycle[i] ,pTimetable.start_cycle[i] ,pTimetable.first_schedule_cycle[i]);
+    int rTime =  pTimetable.first_schedule_cycle[pid] - pTimetable.start_cycle[pid] ;
+    int tTime = prTimetable->end_cycle[pid]-  prTimetable->start_cycle[pid];
+    cprintf( " pID %d:  TurnAround   %d, Response    %d  \n", pid, tTime ,rTime);
 
-    }
     return 0;
 }
