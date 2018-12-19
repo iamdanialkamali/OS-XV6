@@ -1,5 +1,8 @@
 struct stat;
 struct rtcdate;
+struct process_Timetable ;
+
+
 
 // system calls
 int fork(void);
@@ -23,6 +26,7 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int getTimetable(struct process_Timetable* pTimetable,int pid);
 
 // ulib.c
 int stat(char*, struct stat*);

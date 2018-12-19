@@ -9,6 +9,8 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+struct process_Timetable;
+
 
 // bio.c
 void            binit(void);
@@ -120,7 +122,7 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-
+void            boost(void);
 // swtch.S
 void            swtch(struct context**, struct context*);
 
@@ -155,7 +157,7 @@ int             argstr(int, char**);
 int             fetchint(uint, int*);
 int             fetchstr(uint, char**);
 void            syscall(void);
-
+int            getTimetable(struct process_Timetable*,int pid);
 // timer.c
 void            timerinit(void);
 

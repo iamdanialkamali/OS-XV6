@@ -6,6 +6,18 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "Process_timeTable.h"
+struct process_Timetable pTimetable;
+
+
+#define NQUEUE 5
+#define baseTime 10
+#define diffrence 20
+
+int queueCounts[NQUEUE];
+
+int timeSlice[NQUEUE];
+
 
 struct {
   struct spinlock lock;
@@ -20,22 +32,22 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
-void
-pinit(void)
+void pinit(void)
 {
+    for (int i = 0 ; i<NQUEUE;i++){
+        timeSlice[i] = i * diffrence +baseTime;
+    }
   initlock(&ptable.lock, "ptable");
 }
 
 // Must be called with interrupts disabled
-int
-cpuid() {
+int cpuid() {
   return mycpu()-cpus;
 }
 
 // Must be called with interrupts disabled to avoid the caller being
 // rescheduled between reading lapicid and running through the loop.
-struct cpu*
-mycpu(void)
+struct cpu* mycpu(void)
 {
   int apicid, i;
   
@@ -88,8 +100,21 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->priority = 0;
+  p->totalCycle =0;
+  p->cycle = 0;
 
-  release(&ptable.lock);
+  pTimetable.end_cycle[p->pid]=0;
+  p->end_cycle = 0;
+
+  pTimetable.start_cycle[p->pid]=ticks;
+  p->start_cycle = ticks;
+
+  p->first_schedule_cycle = -1;
+  pTimetable.first_schedule_cycle[p->pid] = -1;
+
+    release(&ptable.lock);
+
 
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
@@ -286,6 +311,7 @@ wait(void)
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
+        p->end_cycle = ticks;
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -323,30 +349,61 @@ void
 scheduler(void)
 {
   struct proc *p;
+  struct proc *p1;
   struct cpu *c = mycpu();
   c->proc = 0;
-  
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
-    // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
 
+      // Loop over process table looking for process to run.
+    acquire(&ptable.lock);
+    ///////////////////////finds min  priority //////////////
+
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        int minPrior = 999 ;
+        if(p->first_schedule_cycle ==-1){
+            pTimetable.first_schedule_cycle[p->pid] = ticks;
+            p->first_schedule_cycle = ticks;
+        }
+        for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++)
+            if(minPrior>p->priority)
+                minPrior = p->priority;
+
+        if(p->priority != minPrior)
+            continue;
+        if(p->state != RUNNABLE)
+            continue;
+
+      //  cprintf("%d\n",minPrior);
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
+      p->cycle++;
+      p->totalCycle++;
+//        int pid =p->pid;
+      pTimetable.end_cycle[p->pid]= ticks;
+      p->end_cycle = ticks;
+     // pTimetable.end_cycle[p->pid]=p->end_cycle;
+     // pTimetable.first_schedule_cycle[p->pid]=p->first_schedule_cycle;
+     // pTimetable.start_cycle[p->pid]=p->start_cycle;
+//        cprintf( " %d:    %d,     %d   %d\n", p->pid, p->end_cycle ,p->start_cycle ,p->first_schedule_cycle);
 
-      swtch(&(c->scheduler), p->context);
+        swtch(&(c->scheduler), p->context);
       switchkvm();
 
-      // Process is done running for now.
+
+      if(minPrior != NQUEUE-1 && timeSlice[minPrior]==p->cycle ){
+          p->cycle = 0;
+          p->priority++;
+          queueCounts[minPrior]--;
+          queueCounts[minPrior+1]++;
+      }
+        // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
     }
@@ -531,4 +588,26 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+void boost(){
+  acquire(&ptable.lock);
+  struct proc *p;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    p->priority = 0;
+    p->cycle = 0;
+  }
+
+  release(&ptable.lock);
+
+}
+
+int getTimetable(struct process_Timetable* prTimetable,int pid) {
+    pid++;
+    prTimetable = &pTimetable;
+    for(int i  =0 ; i<NPROC ;i++){
+        cprintf( " %d:    %d,     %d   %d\n", i, pTimetable.end_cycle[i] ,pTimetable.start_cycle[i] ,pTimetable.first_schedule_cycle[i]);
+
+    }
+    return 0;
 }

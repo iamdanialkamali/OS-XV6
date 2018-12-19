@@ -6,6 +6,8 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "Process_timeTable.h"
+
 
 int
 sys_fork(void)
@@ -88,4 +90,20 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+
+
+int
+sys_getTimetable(void)
+{
+    int pid;
+    if (argint(0, &pid) < 0)
+        return -1;
+  struct process_Timetable * processTimeTable;
+  if(argptr(0,(void *) &processTimeTable, sizeof(*processTimeTable))< 0 ){
+    return -1;
+  }
+
+  return getTimetable(processTimeTable, pid);
 }
